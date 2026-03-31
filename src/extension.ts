@@ -1,9 +1,10 @@
 import * as vscode from 'vscode';
 
-async function getContext(editor: vscode.TextEditor): Promise<string> {
+/**
+ * Gets the Class > Method path, stripping parameters and generics.
+ */
+async function getCodeContext(editor: vscode.TextEditor): Promise<string> {
     const position = editor.selection.active;
-    
-    // Ask VS Code for the symbol tree of the current file
     const symbols = await vscode.commands.executeCommand<vscode.DocumentSymbol[]>(
         'vscode.executeDocumentSymbolProvider',
         editor.document.uri
@@ -11,74 +12,84 @@ async function getContext(editor: vscode.TextEditor): Promise<string> {
 
     if (!symbols) return "";
 
-    let context: string[] = [];
-
-    // Helper to walk down the tree
+    const breadcrumbs: string[] = [];
     function findRecursive(symbolList: vscode.DocumentSymbol[]) {
         for (const symbol of symbolList) {
-            // Check if our cursor is inside this symbol's range
             if (symbol.range.contains(position)) {
-				const cleanName = symbol.name.replace(/\(.*\)/g, '').trim();
-                context.push(cleanName);
-                if (symbol.children && symbol.children.length > 0) {
-                    findRecursive(symbol.children);
-                }
-                break; // We found the path, stop sibling search
+                const cleanName = symbol.name.split(/[<()]/)[0].trim();
+                breadcrumbs.push(cleanName);
+                if (symbol.children?.length) findRecursive(symbol.children);
+                break;
             }
         }
     }
 
     findRecursive(symbols);
-    return context.join(' > '); // e.g., "UserModule > AuthService > login"
+    return breadcrumbs.join(' > ');
 }
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
+/**
+ * Grabs the repo name and short commit hash.
+ */
+function getGitInfo(uri: vscode.Uri) {
+    const gitExtension = vscode.extensions.getExtension('vscode.git')?.exports;
+    if (!gitExtension) return { repo: "no-git", hash: "no-commit" };
+
+    const api = gitExtension.getAPI(1);
+    const repo = api.getRepository(uri);
+    if (!repo) return { repo: "no-repo", hash: "no-commit" };
+
+    const remote = repo.state.remotes[0]?.fetchUrl || "local";
+    const hash = repo.state.HEAD?.commit?.substring(0, 7) || "unsaved";
+    
+    // Clean repo string
+    const cleanRepo = remote.replace('https://', '').replace('.git', '');
+    return { repo: cleanRepo, hash };
+}
+
+/**
+ * Shared logic to build and copy the string
+ */
+async function runCopyReference(includeCode: boolean) {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) return;
+
+    const { repo, hash } = getGitInfo(editor.document.uri);
+    const path = vscode.workspace.asRelativePath(editor.document.uri);
+    const contextPath = await getCodeContext(editor);
+    
+    const start = editor.selection.start.line + 1;
+    const end = editor.selection.end.line + 1;
+    const lines = editor.selection.isSingleLine ? `L${start}` : `L${start}-L${end}`;
+    
+    const lang = editor.document.languageId === "plaintext" ? "" : editor.document.languageId;
+    const code = editor.document.getText(editor.selection);
+
+    // Build the array (No emojis, clean text)
+    const linesArray = [
+        `PATH: ${path}`,
+        `REPO: ${repo} (ref: ${hash})`,
+        contextPath ? `CONTEXT: ${contextPath} [${lines}]` : `LOCATION: ${lines}`
+    ];
+
+    if (includeCode) {
+        linesArray.push('', `\`\`\`${lang}`, code, `\`\`\``);
+    }
+
+    await vscode.env.clipboard.writeText(linesArray.join('\n'));
+    vscode.window.showInformationMessage(includeCode ? 'Full reference copied' : 'Reference link copied');
+}
+
 export function activate(context: vscode.ExtensionContext) {
+    // Command 1: Full
+    context.subscriptions.push(
+        vscode.commands.registerCommand('reference-vscode.detailed-reference', () => runCopyReference(true))
+    );
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "reference-vscode" is now active!');
-
-	// The commandId parameter must match the command field in package.json
-	const disposable = vscode.commands.registerCommand('reference-vscode.simple-reference', async () => {
-		const editor = vscode.window.activeTextEditor;
-		if (!editor) return;
-
-		const selection = editor.selection;
-		const text = editor.document.getText(selection);
-		const path = vscode.workspace.asRelativePath(editor.document.uri);
-		const lang = editor.document.languageId === "plaintext" ? "" : editor.document.languageId;
-		const fromLine = selection.start.line + 1;
-		var lineRange;
-		if (!selection.isSingleLine) {
-			const toLine = selection.end.line + 1;
-			lineRange = `L${fromLine}-${toLine}`;
-		} else {
-			lineRange = `L${fromLine}`;
-		}
-
-		const gitExtension = vscode.extensions.getExtension('vscode.git')?.exports;
-		const gitApi = gitExtension.getAPI(1);
-		const uri = editor.document.uri;
-		const repository = gitApi.getRepository(uri);
-		let repoName = "no-repo";
-		let commitHash = "no-commit";
-		if (repository) {
-			// Get the remote URL (e.g., github.com/user/repo)
-			const remote = repository.state.remotes[0];
-			repoName = remote ? remote.fetchUrl : "local-only";
-			commitHash = repository.state.HEAD?.commit?.substring(0, 7) || "unsaved";
-		}
-		const codeContext = await getContext(editor);
-
-		const finalString = `${repoName} (${commitHash}) > ${path}\n${codeContext} @ ${lineRange}\n\n\`\`\`${lang}\n${text}\n\`\`\``;
-		await vscode.env.clipboard.writeText(finalString);
-		vscode.window.showInformationMessage('Successfully copied simple reference');
-	});
-
-	context.subscriptions.push(disposable);
+    // Command 2: Lite (No code block)
+    context.subscriptions.push(
+        vscode.commands.registerCommand('reference-vscode.simple-reference', () => runCopyReference(false))
+    );
 }
 
-// This method is called when your extension is deactivated
 export function deactivate() {}
