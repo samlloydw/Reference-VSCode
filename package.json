@@ -32,12 +32,12 @@
         {
           "when": "editorHasSelection",
           "command": "reference-vscode.simple-reference",
-          "group": "navigation@1"
+          "group": "9_cutcopypaste@1"
         },
         {
           "when": "editorHasSelection",
           "command": "reference-vscode.detailed-reference",
-          "group": "navigation@2"
+          "group": "9_cutcopypaste@2"
         }
       ]
     },
