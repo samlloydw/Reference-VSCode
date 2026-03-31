@@ -9,15 +9,28 @@
   "categories": [
     "Other"
   ],
+  "extensionDependencies": [
+    "vscode.git"
+  ],
   "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "reference-vscode.helloWorld",
-        "title": "Hello World"
+        "command": "reference-vscode.simple-reference",
+        "title": "Simple Reference",
+        "category": "Reference"
       }
-    ]
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "when": "editor.hasSelection",
+          "command": "reference-vscode.simple-reference",
+          "group": "navigation@1"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
