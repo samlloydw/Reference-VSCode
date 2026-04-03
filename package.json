@@ -54,7 +54,23 @@
         "mac": "cmd+alt+shift+c",
         "when": "editorHasSelection"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "Reference VSCode",
+      "properties": {
+        "reference-vscode.includeGitInfo": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include Repository URL and Commit Hash in the reference."
+        },
+        "reference-vscode.referenceStyle": {
+          "type": "string",
+          "enum": ["Standard", "GitHubLink", "Minimalist"],
+          "default": "Standard",
+          "description": "Choose the formatting style for the metadata."
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",

@@ -19,7 +19,7 @@ Copies high-level metadata to your clipboard:
 
 ```text
 PATH: app/MyReference.hs
-REPO: no-repo (ref: no-commit)
+REPO: user/repo (ref: a1b2c)
 LOCATION: L3-L7
 ```
 
@@ -38,7 +38,7 @@ Like Simple References but with:
 #### Example Output:
 ```text
 PATH: app/MyReference.hs
-REPO: no-repo (ref: no-commit)
+REPO: user/repo (ref: a1b2c)
 LOCATION: L3-L7
 ```
 
@@ -56,15 +56,32 @@ Select a block of code, right click and select "Code Block Reference"
 
 **Hotkey:** `Ctrl`+`Alt`+`Shift`+`C` (Windows) / `Cmd`+`Option`+`Shift`+`C` (MacOS)
 
+## Extension Settings
+
+This extension contributes the following settings. You can find these in **File > Preferences > Settings** (or `Cmd+,` on macOS) by searching for `reference-vscode`.
+
+### `reference-vscode.referenceStyle`
+Select the format used for the metadata copied to your clipboard.
+
+| Style | Example Output | Best Use Case |
+| :--- | :--- | :--- |
+| **Standard** | `PATH: src/app.ts` <br> `REPO: user/repo (ref: a1b2c)` <br> `CONTEXT: Auth > Login [L10-L15]` | Detailed documentation or internal notes. |
+| **GitHubLink** | `https://github.com/user/repo/blob/a1b2c/src/app.ts#L10-L15` <br> `Auth > Login` | Code reviews or Slack/Jira comments. |
+| **Minimalist** | `user/repo (a1b2c) :: src/app.ts :: Auth > Login (L10-L15)` | Quick references that fit on a single line. |
+
+### `reference-vscode.includeGitInfo`
+* **Type:** `boolean`
+* **Default:** `true`
+* **Description:** Toggle to include or exclude the Repository URL and Commit Hash. If no Git repository is detected, no repository information is shown.
+
 ## Requirements
 
-- VSCode ^=1.110.0
+- **VSCode** ^=1.110.0
 - **vscode.git**: Must be enabled to fetch repo/commit data.
 - **Language Extensions:** To see class/method/function names in the "context" field. Ensure you have the relevant Language Server installed. (e.g., `rust-analyzer` for Rust, `Haskell` for Haskell, `Pyright` for Python)
 
 ## Known Issues
 
-* If the current file is not part of a Git repository, the REPO field will default to `no-repo`.
 * If no symbols are found in the file, the CONTEXT field will show line numbers only.
 
 ## Release Notes
@@ -83,4 +100,4 @@ Users appreciate release notes as you update your extension.
 I'm happy to hear your thoughts or feature suggestions!
 
 **Maintainer**: Sam Lloyd-Williams
-**Email**: `samlloydw+referencevscode@gmail.com`
+**Email**: samlloydw+referencevscode@gmail.com
