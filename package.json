@@ -1,6 +1,6 @@
 {
   "name": "smart-vscode-copy",
-  "displayName": "Copy and Reference Code",
+  "displayName": "Smart Code Copy",
   "description": "Copy and reference code snippets easily and consistently",
   "version": "1.0.0",
   "publisher": "samlloydw",
