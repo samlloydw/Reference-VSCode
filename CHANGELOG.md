@@ -29,3 +29,7 @@ All notable changes to the "Smart VSCode Copy" extension will be documented in t
 ## [1.1.1] - 2026-04-04
 
 - Updated CHANGELOG.md
+
+## [1.1.2] - 2026-04-07
+
+- Changed VSCode version to 1.60.0 as APIs are stable.

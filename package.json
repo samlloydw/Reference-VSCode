@@ -10,7 +10,7 @@
     "url": "https://github.com/samlloydw/smart-vscode-copy"
   },
   "engines": {
-    "vscode": "^1.110.0"
+    "vscode": "^1.60.0"
   },
   "categories": [
     "Other"

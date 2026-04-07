@@ -35,13 +35,13 @@ Like Simple References but with:
 - **Langage Information:** Used to write the code.
 - **Code Block:** Highlighed code ready to be pasted into a markdown document.
 
-#### Example Output:
+#### Example Output
+
 ```text
 PATH: app/MyReference.hs
 REPO: user/repo (ref: a1b2c)
 LOCATION: L3-L7
 ```
-
 ```haskell
 fibs :: [Integer]
 fibs = 0 : 1 : zipWith (+) fibs (drop 1 fibs)
